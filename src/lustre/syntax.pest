@@ -1,0 +1,2 @@
+// Identifiers may begin with `_` or an ASCII character.
+identifier = @{ ("_" | ASCII_ALPHA)+ ~ ("_" | ASCII_ALPHA | ASCII_DIGIT)* }
