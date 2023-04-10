@@ -1,16 +1,29 @@
 
-use pest::Parser;
+use pest::{ Parser, pratt_parser::{Assoc, Op, PrattParser}};
 use crate::errors;
-use pest_consume::{Error};
+use pest_consume::{match_nodes, Error};
 
 // // include the grammar file so that Cargo knows to rebuild this file on grammar changes
 // const _GRAMMAR: &str = include_str!("lustre/syntax.pest");
+
+
+// Define the precedence of binary operations. We use `lazy_static` so that
+// this is only ever constructed once.
+lazy_static::lazy_static! {
+    static ref PRATT: PrattParser<Rule> =
+    PrattParser::default();
+        // .op(Op::infix(Rule::guard_or, Assoc::Left))
+        // .op(Op::infix(Rule::guard_and, Assoc::Left));
+}
+
 
 #[derive(Parser)]
 #[grammar="lustre/syntax.pest"]
 pub struct LustreParser;
 
 type ParseRes<T> = Result<T, Error<Rule>>;
+
+
 
 impl LustreParser {
     
