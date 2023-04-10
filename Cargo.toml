@@ -9,6 +9,7 @@ edition = "2021"
 #parsing
 pest = "2"
 pest_derive = "2"
+pest_consume = "1"
 lazy_static = "1.2"
 #commandline parsing
 clap    = {version = "4.1.8", features = ["derive", "wrap_help", "env"] }
