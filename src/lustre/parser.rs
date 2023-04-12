@@ -23,7 +23,9 @@ pub struct LustreParser;
 
 type ParseRes<T> = Result<T, Error<Rule>>;
 
+// pub fn parse_constant(pairs: Pairs<Rule>) -> {
 
+// } 
 
 impl LustreParser {
     

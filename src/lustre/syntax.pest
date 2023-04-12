@@ -22,6 +22,7 @@ hexadecimal_constant = { hexadecimal_prefix  ~ hexadecimal_digit+ }
 unsigned_suffix  = _{ "u" | "U"}
 long_suffix      = _{ "l" | "L"}
 long_long_suffix = _{ "ll" | "LL"}
+//Not using these rules currently
 integer_suffix   = {
     (unsigned_suffix  ~ long_suffix?)
   | (unsigned_suffix  ~ long_long_suffix?)
