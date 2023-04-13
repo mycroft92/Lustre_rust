@@ -1,3 +1,5 @@
+///Adapting grammar from Vélus repo
+
 // // Identifiers may begin with `_` or an ASCII character.
 
 
@@ -6,6 +8,7 @@
 // node_list = { node* }
 
 // node = { "node" ~ identifier ~ "(" ~ streams_decl ~ ")" ~ "return" ~ streams_decl ~ "let" ~ var}
+
 
 bool_constant = { "true" | "false" }
 identifier    = @{ ("_" | ASCII_ALPHA)+ ~ ("_" | ASCII_ALPHA | ASCII_DIGIT)* }
@@ -19,10 +22,10 @@ hexadecimal_prefix   = _{ ("0x") | ("0X") }
 hexadecimal_digit    = _{ ('A'..'F') | ('a'..'f') | ASCII_DIGIT }
 hexadecimal_constant = { hexadecimal_prefix  ~ hexadecimal_digit+ }
 
+//Not using these rules currently
 unsigned_suffix  = _{ "u" | "U"}
 long_suffix      = _{ "l" | "L"}
 long_long_suffix = _{ "ll" | "LL"}
-//Not using these rules currently
 integer_suffix   = {
     (unsigned_suffix  ~ long_suffix?)
   | (unsigned_suffix  ~ long_long_suffix?)
@@ -34,9 +37,10 @@ integer_suffix   = {
 integer_constant = _{ (hexadecimal_constant) | (octal_constant) | (decimal_constant) }
 
 
-constant        = _{ bool_constant | integer_constant } 
+constant         = _{ bool_constant | integer_constant } 
 
-file            = {SOI ~ constant ~ EOI}
+primary_expression = {}
+
 
 // primary_expression:
 // | var=VAR_NAME
