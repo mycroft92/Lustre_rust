@@ -39,7 +39,7 @@ integer_constant = _{ (hexadecimal_constant) | (octal_constant) | (decimal_const
 
 constant         = _{ bool_constant | integer_constant } 
 
-primary_expression = {}
+primary_expression = { identifier | constant | expression_list }
 
 
 // primary_expression:
