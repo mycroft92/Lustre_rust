@@ -12,8 +12,6 @@ use pest_consume::{match_nodes, Error};
 lazy_static::lazy_static! {
     static ref PRATT: PrattParser<Rule> =
     PrattParser::default();
-        // .op(Op::infix(Rule::guard_or, Assoc::Left))
-        // .op(Op::infix(Rule::guard_and, Assoc::Left));
 }
 
 
