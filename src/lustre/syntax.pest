@@ -36,10 +36,13 @@ integer_suffix   = {
 
 integer_constant = _{ (hexadecimal_constant) | (octal_constant) | (decimal_constant) }
 
-
 constant         = _{ bool_constant | integer_constant } 
 
 primary_expression = { identifier | constant | expression_list }
+
+postfix_expression = {  (identifier ~ "(" ~ expression_list ~ ")") | ("(" ~  "restart" ~ identifier ~ "every" ~ expression ~ ")" ~ "(" ~ expression_list ~")") | primary_expression }
+
+expression_list    = { expression ~ ( "," ~ expression)* }
 
 
 // primary_expression:
