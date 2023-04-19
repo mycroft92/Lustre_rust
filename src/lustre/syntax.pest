@@ -38,13 +38,6 @@ integer_constant = _{ (hexadecimal_constant) | (octal_constant) | (decimal_const
 
 constant         = _{ bool_constant | integer_constant } 
 
-primary_expression = { identifier | constant | expression_list }
-
-postfix_expression = {  (identifier ~ "(" ~ expression_list ~ ")") | ("(" ~  "restart" ~ identifier ~ "every" ~ expression ~ ")" ~ "(" ~ expression_list ~")") | primary_expression }
-
-expression_list    = { expression ~ ( "," ~ expression)* }
-
-
 // primary_expression:
 // | var=VAR_NAME
 //     { [LustreAst.VARIABLE (fst var) (snd var)] }
@@ -52,6 +45,7 @@ expression_list    = { expression ~ ( "," ~ expression)* }
 //     { [LustreAst.CONSTANT (fst cst) (snd cst)] }
 // | loc=LPAREN expr=expression_list RPAREN
 //     { rev expr }
+primary_expression = { identifier | constant | expression_list }
 
 // (* 6.5.2 *)
 // postfix_expression:
@@ -62,6 +56,7 @@ expression_list    = { expression ~ ( "," ~ expression)* }
 // | LPAREN RESTART fn=VAR_NAME EVERY e=expression RPAREN
 //   LPAREN args=expression_list RPAREN
 //     { [LustreAst.APP (fst fn) (rev args) e (snd fn)] }
+postfix_expression = {  (identifier ~ "(" ~ expression_list ~ ")") | ("(" ~  "restart" ~ identifier ~ "every" ~ expression ~ ")" ~ "(" ~ expression_list ~")") | primary_expression }
 
 // (* Semantic value is in reverse order. *)
 // expression_list:
@@ -69,6 +64,7 @@ expression_list    = { expression ~ ( "," ~ expression)* }
 //     { expr }
 // | exprs=expression_list COMMA expr=expression
 //     { expr ++ exprs }
+expression_list    = { expression ~ ( "," ~ expression)* }
 
 // (* 6.5.3 *)
 // unary_expression:
@@ -91,6 +87,8 @@ expression_list    = { expression ~ ( "," ~ expression)* }
 // 	[LustreAst.CONSTANT (LustreAst.CONST_INT LustreAst.string_one) loc]
 // 	loc]
 //     }
+unary_expression = { ("#" ~ "(" ~ expression_list  ~ ")") | unary_operator ~ cast_expression | postfix_expression }
+
 
 // unary_operator:
 // | loc=MINUS
@@ -99,6 +97,7 @@ expression_list    = { expression ~ ( "," ~ expression)* }
 //     { (LustreAst.NOT, loc) }
 // | loc=NOT
 //     { (LustreAst.BNOT, loc) }
+unary_operator = {"-" | "~" | "!"}
 
 // (* 6.5.4 *)
 // cast_expression:
