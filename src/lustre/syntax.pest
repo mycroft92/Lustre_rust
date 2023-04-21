@@ -48,22 +48,11 @@ constant         = _{ bool_constant | integer_constant }
 primary_expression = { identifier | constant | expression_list }
 
 // (* 6.5.2 *)
-// postfix_expression:
-// | expr=primary_expression
-//     { expr }
-// | fn=VAR_NAME LPAREN args=expression_list RPAREN
-//     { [LustreAst.APP (fst fn) (rev args) [] (snd fn)] }
-// | LPAREN RESTART fn=VAR_NAME EVERY e=expression RPAREN
-//   LPAREN args=expression_list RPAREN
-//     { [LustreAst.APP (fst fn) (rev args) e (snd fn)] }
-postfix_expression = {  (identifier ~ "(" ~ expression_list ~ ")") | ("(" ~  "restart" ~ identifier ~ "every" ~ expression ~ ")" ~ "(" ~ expression_list ~")") | primary_expression }
+postfix_expression = { 
+  (identifier ~ "(" ~ expression_list ~ ")") 
+  | ("(" ~  "restart" ~ identifier ~ "every" ~ expression ~ ")" ~ "(" ~ expression_list ~")") 
+  | primary_expression }
 
-// (* Semantic value is in reverse order. *)
-// expression_list:
-// | expr=expression
-//     { expr }
-// | exprs=expression_list COMMA expr=expression
-//     { expr ++ exprs }
 expression_list    = { expression ~ ( "," ~ expression)* }
 
 // (* 6.5.3 *)
@@ -87,93 +76,61 @@ expression_list    = { expression ~ ( "," ~ expression)* }
 // 	[LustreAst.CONSTANT (LustreAst.CONST_INT LustreAst.string_one) loc]
 // 	loc]
 //     }
-unary_expression = { ("#" ~ "(" ~ expression_list  ~ ")") | unary_operator ~ cast_expression | postfix_expression }
+unary_expression = { 
+  ("#" ~ "(" ~ expression_list  ~ ")")
+  | unary_operator ~ cast_expression 
+  | postfix_expression }
 
 
-// unary_operator:
-// | loc=MINUS
-//     { (LustreAst.MINUS, loc) }
-// | loc=LNOT
-//     { (LustreAst.NOT, loc) }
-// | loc=NOT
-//     { (LustreAst.BNOT, loc) }
 unary_operator = {"-" | "~" | "!"}
 
 // (* 6.5.4 *)
-// cast_expression:
-// | expr=unary_expression
-//     { expr }
-// | LPAREN expr=cast_expression loc=COLON typ=type_name RPAREN
-//     { [LustreAst.CAST (fst typ) expr loc] }
+cast_expression = {
+  ("(" ~ cast_expression ~ ":" ~ type_name ~ ")") 
+  | (unary_expression)}
 
-// (* Lustre fby operator *)
-// fby_expression:
-// | expr=cast_expression
-//     { expr }
-// | v0=cast_expression loc=FBY expr=fby_expression
-//     { [LustreAst.FBY v0 expr loc] }
+fby_expression = { 
+  (cast_expression ~ "fby" ~ fby_expression) 
+  | (cast_expression)}
 
 // (* 6.5.5 *)
-// multiplicative_expression:
-// | expr=fby_expression
-//     { expr }
-// | expr1=multiplicative_expression loc=STAR expr2=fby_expression
-//     { [LustreAst.BINARY LustreAst.MUL expr1 expr2 loc] }
-// | expr1=multiplicative_expression loc=SLASH expr2=fby_expression
-//     { [LustreAst.BINARY LustreAst.DIV expr1 expr2 loc] }
-// | expr1=multiplicative_expression loc=MOD expr2=fby_expression
-//     { [LustreAst.BINARY LustreAst.MOD expr1 expr2 loc] }
+multiplicative_expression = { 
+  (multiplicative_expression ~ "*" ~ fby_expression) 
+  | (multiplicative_expression ~ "/" ~ fby_expression) 
+  | (multiplicative_expression ~ "%" ~ fby_expression) 
+  | fby_expression }
 
 // (* 6.5.6 *)
-// additive_expression:
-// | expr=multiplicative_expression
-//     { expr }
-// | expr1=additive_expression loc=PLUS expr2=multiplicative_expression
-//     { [LustreAst.BINARY LustreAst.ADD expr1 expr2 loc] }
-// | expr1=additive_expression loc=MINUS expr2=multiplicative_expression
-//     { [LustreAst.BINARY LustreAst.SUB expr1 expr2 loc] }
+additive_expression  = { 
+    (additive_expression ~ "+" ~ multiplicative_expression) 
+    |  (additive_expression ~ "-" ~ multiplicative_expression) 
+    | multiplicative_expression }
 
 // (* 6.5.7 *)
-// shift_expression:
-// | expr=additive_expression
-//     { expr }
-// | expr1=shift_expression loc=LSL expr2=additive_expression
-//     { [LustreAst.BINARY LustreAst.LSL expr1 expr2 loc] }
-// | expr1=shift_expression loc=LSR expr2=additive_expression
-//     { [LustreAst.BINARY LustreAst.LSR expr1 expr2 loc] }
+shift_expression     = {
+    (shift_expression ~ "<<" ~ additive_expression) 
+    | (shift_expression ~ ">>" ~ additive_expression) 
+    | additive_expression}
 
-// (* Lustre when operators *)
-// when_expression:
-// | expr=shift_expression
-//     { expr }
-// | expr=when_expression loc=WHEN id=VAR_NAME
-//     { [LustreAst.WHEN expr (fst id) true loc] }
-// | expr=when_expression loc=WHEN NOT id=VAR_NAME
-//     { [LustreAst.WHEN expr (fst id) false loc] }
-// | expr=when_expression loc=WHENOT id=VAR_NAME
-//     { [LustreAst.WHEN expr (fst id) false loc] }
+when_expression  = { 
+    (when_expression ~ "whenot" ~ identifier)
+    | (when_expression ~ "when" ~ identifier)
+    | shift_expression}
 
 // (* 6.5.8 *)
-// relational_expression:
-// | expr=when_expression
-//     { expr }
-// | expr1=relational_expression loc=LT expr2=when_expression
-//     { [LustreAst.BINARY LustreAst.LT expr1 expr2 loc] }
-// | expr1=relational_expression loc=GT expr2=when_expression
-//     { [LustreAst.BINARY LustreAst.GT expr1 expr2 loc] }
-// | expr1=relational_expression loc=LEQ expr2=when_expression
-//     { [LustreAst.BINARY LustreAst.LE expr1 expr2 loc] }
-// | expr1=relational_expression loc=GEQ expr2=when_expression
-//     { [LustreAst.BINARY LustreAst.GE expr1 expr2 loc] }
+relational_expression = { 
+  (relational_expression ~ "<=" ~ when_expression) 
+  | (relational_expression ~ ">=" ~ when_expression)
+  | (relational_expression ~ "<" ~ when_expression)
+  | (relational_expression ~ ">" ~ when_expression)
+  | when_expression }
 
 // (* 6.5.9 *)
-// equality_expression:
-// | expr=relational_expression
-//     { expr }
-// | expr1=equality_expression loc=EQ expr2=relational_expression
-//     { [LustreAst.BINARY LustreAst.EQ expr1 expr2 loc] }
-// | expr1=equality_expression loc=NEQ expr2=relational_expression
-//     { [LustreAst.BINARY LustreAst.NE expr1 expr2 loc] }
+equality_expression = {
+  (equality_expression ~ "=" ~ relational_expression)
+  | (equality_expression ~ "<>" ~ relational_expression)
+  | relational_expression
+}
 
 // (* 6.5.10 *)
 // AND_expression:
@@ -181,6 +138,9 @@ unary_operator = {"-" | "~" | "!"}
 //     { expr }
 // | expr1=AND_expression loc=AND expr2=equality_expression
 //     { [LustreAst.BINARY LustreAst.BAND expr1 expr2 loc] }
+AND_expression = {
+  (AND_expression )
+}
 
 // (* 6.5.11 *)
 // exclusive_OR_expression:
