@@ -242,66 +242,35 @@ clock = {
   | (".")
 }
 
-// local_decl:
-// | vd=local_var_decl
-//     { vd }
-local_decl = _{
-  local_var_decl
-}
 
-// local_decl_list:
-// | /* empty */
-//     { [] }
-// | dl=local_decl_list d=local_decl
-//     { d ++ dl }
 local_decl_list = {
-  (local_decl_list ~ local_decl)
+  (local_decl_list ~ local_var_decl)
 }
 
-// parameter_list:
-// | vars=var_decl
-//     { vars }
-// | vars_list=parameter_list SEMICOLON vars=var_decl
-//     { vars_list ++ vars }
 
-// oparameter_list:
-// | /* empty */
-//     { [] }
-// | vars_list=parameter_list
-//     { vars_list }
+parameter_list = {
+  (parameter_list ~ ";" ~ var_decl)
+  | var_decl
+}
 
-// (* Semantic value is in reverse order. *)
-// pattern:
-// | id=VAR_NAME
-//     { [fst id] }
-// | pat=pattern COMMA id=VAR_NAME
-//     { fst id::pat }
+pattern = {
+  (pattern ~ "," ~ identifier)
+  | identifier
+}
 
-// equation:
-// | pat=pattern loc=EQ exp=expression SEMICOLON
-//     { (rev pat, exp, loc) }
-// | LPAREN pat=pattern RPAREN loc=EQ exp=expression SEMICOLON
-//     { (rev pat, exp, loc) }
+equation = {
+  (pattern ~ "=" ~ expression ~ ";")
+  | ("(" ~ pattern ~ ")" ~ "=" ~ expression ~ ";" )
+}
 
-// equations:
-// | /* empty */
-//     { [] }
-// | eqs=equations eq=equation
-//     { eq::eqs }
-// | eqs=equations ASSERT expression SEMICOLON
-//     { eqs (* ignore assert statements for now *) }
+equations = {
+  (equations ~ "assert" ~ expression ~ ";")
+  | (equations ~ equation)
+}
 
-// optsemicolon:
-// | /* empty */
-//     { () }
-// | SEMICOLON
-//     { () }
-
-// node_or_function:
-// | loc=NODE
-//     { (true, loc) }
-// | loc=FUNCTION
-//     { (false, loc) }
+node_or_function = {
+  "node" | "function"
+}
 
 // declaration:
 // | is_node=node_or_function id=VAR_NAME
@@ -311,14 +280,17 @@ local_decl_list = {
 //     { LustreAst.NODE
 //         (fst id) (fst is_node) iparams oparams locals eqns (snd is_node) }
 
-// translation_unit:
-// | def=declaration
-//     { [def] }
-// | defq=translation_unit deft=declaration
-//     { deft::defq }
+declaration = {
+  (node_or_function ~ identifier ~ "(" ~ parameter_list? ~ ")" ~ ";"? 
+    ~ "returns" ~ "(" ~ parameter_list ~ ")" ~ ";"? 
+    ~ local_decl_list? ~ "let" ~ equations? ~ "tel" ~ ";"?)
+}
 
-// translation_unit_file:
-// | lst=translation_unit EOF
-//     { List.rev lst }
-// | EOF
-//     { [] }
+translation_unit = {
+  (translation_unit ~ declaration)
+  | declaration
+}
+
+
+file = {(SOI ~ translation_unit ~ EOI) | (SOI ~ EOI)}
+
