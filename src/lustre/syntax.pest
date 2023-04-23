@@ -169,16 +169,6 @@ arrow_expression = {
 }
 
 // (* 6.5.15/16/17, 6.6 + Lustre merge operator *)
-// expression:
-// | expr=arrow_expression
-//     { expr }
-// | loc=IFTE expr1=expression THEN expr2=expression ELSE expr3=expression
-//     { [LustreAst.IFTE expr1 expr2 expr3 loc] }
-// | loc=MERGE LPAREN id=VAR_NAME SEMICOLON expr1=expression SEMICOLON expr2=expression RPAREN
-//     { [LustreAst.MERGE (fst id) expr1 expr2 loc] }
-// | loc=MERGE id=VAR_NAME LPAREN TRUE  RARROW expr1=expression RPAREN
-// 			LPAREN FALSE RARROW expr2=expression RPAREN
-//     { [LustreAst.MERGE (fst id) expr1 expr2 loc] }
 expression = { 
   ("merge" ~ identifier ~ "(" ~ "true" ~ "->" ~ expression ~")" ~ "(" ~ "false" ~ "->" ~ expression ~")")
   | ("merge" ~ "(" ~ identifier ~ ";" ~ expression ~ ";" ~ expression ~ ")")
@@ -196,25 +186,13 @@ var_decl = {
   (identifier_list ~ ":" ~ type_name ~ declared_clock) 
   | (identifier_list ~ ":" ~ type_name) }
 
-// var_decl_list:
-// | vars=var_decl
-//     { vars }
-// | vars_list=var_decl_list SEMICOLON vars=var_decl
-//     { vars_list ++ vars }
 var_decl_list = { 
   (var_decl_list ~ ";" ~ var_decl)
   | var_decl
 }
-// local_var_decl:
-// | loc=VAR vars_list=var_decl_list SEMICOLON
-//     { vars_list }
+
 local_var_decl = { "var" ~ var_decl_list ~ ";"}
 
-// identifier_list:
-// | id=VAR_NAME
-//     { [fst id] }
-// | idl=identifier_list COMMA id=VAR_NAME
-//     { fst id :: idl }
 identifier_list = { 
   (identifier_list ~ "," ~ identifier)
   | identifier
@@ -222,31 +200,21 @@ identifier_list = {
 
 type_name = {"int8" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" | "uint64" | "float32" | "float64" | "bool"}
 
-
 declared_clock = {
   ("::" ~ clock)
   | ("whenot" ~ identifier)
   | ("when"   ~ identifier)
 }
 
-// clock:
-// | DOT
-//     { LustreAst.BASE }
-// | clk=clock ON id=VAR_NAME
-//     { LustreAst.ON clk (fst id) true }
-// | clk=clock ONOT id=VAR_NAME
-//     { LustreAst.ON clk (fst id) false }
 clock = {
   (clock ~ "onot" ~ identifier)
   | (clock ~ "on" ~ identifier)
   | (".")
 }
 
-
 local_decl_list = {
   (local_decl_list ~ local_var_decl)
 }
-
 
 parameter_list = {
   (parameter_list ~ ";" ~ var_decl)
@@ -290,7 +258,6 @@ translation_unit = {
   (translation_unit ~ declaration)
   | declaration
 }
-
 
 file = {(SOI ~ translation_unit ~ EOI) | (SOI ~ EOI)}
 
