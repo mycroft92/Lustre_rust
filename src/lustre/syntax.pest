@@ -133,45 +133,35 @@ equality_expression = {
 }
 
 // (* 6.5.10 *)
-// AND_expression:
-// | expr=equality_expression
-//     { expr }
-// | expr1=AND_expression loc=AND expr2=equality_expression
-//     { [LustreAst.BINARY LustreAst.BAND expr1 expr2 loc] }
 AND_expression = {
-  (AND_expression )
+  (AND_expression ~ "and" ~ equality_expression)
+  | equality_expression
 }
 
 // (* 6.5.11 *)
-// exclusive_OR_expression:
-// | expr=AND_expression
-//     { expr }
-// | expr1=exclusive_OR_expression loc=LXOR expr2=AND_expression
-//     { [LustreAst.BINARY LustreAst.XOR expr1 expr2 loc] }
-// | expr1=exclusive_OR_expression loc=XOR expr2=AND_expression
-//     { [LustreAst.BINARY LustreAst.XOR expr1 expr2 loc] }
+exclusive_OR_expression = { 
+  (exclusive_OR_expression ~ "xor" ~ AND_expression)
+  | (exclusive_OR_expression ~ "lxor" ~ AND_expression)
+  | AND_expression
+ }
 
 // (* 6.5.12 *)
-// inclusive_OR_expression:
-// | expr=exclusive_OR_expression
-//     { expr }
-// | expr1=inclusive_OR_expression loc=LOR expr2=exclusive_OR_expression
-//     { [LustreAst.BINARY LustreAst.BOR expr1 expr2 loc] }
+inclusive_OR_expression = {
+  (inclusive_OR_expression ~ "lor" ~ exclusive_OR_expression)
+  | exclusive_OR_expression
+}
 
 // (* 6.5.13 *)
-// logical_AND_expression:
-// | expr=inclusive_OR_expression
-//     { expr }
-// | expr1=logical_AND_expression loc=LAND expr2=inclusive_OR_expression
-//     { [LustreAst.BINARY LustreAst.LAND expr1 expr2 loc] }
+logical_AND_expression = {
+  (logical_AND_expression ~ "LAND" ~ inclusive_OR_expression)
+  | inclusive_OR_expression
+}
 
 // (* 6.5.14 *)
-// logical_OR_expression:
-// | expr=logical_AND_expression
-//     { expr }
-// | expr1=logical_OR_expression loc=OR expr2=logical_AND_expression
-//     { [LustreAst.BINARY LustreAst.LOR expr1 expr2 loc] }
-
+logical_OR_expression = {
+  (logical_OR_expression ~ "or" ~ logical_AND_expression)
+  | logical_AND_expression
+}
 // (* Lustre Arrow Operator *)
 // arrow_expression:
 // | expr=logical_OR_expression
