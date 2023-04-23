@@ -163,11 +163,10 @@ logical_OR_expression = {
   | logical_AND_expression
 }
 // (* Lustre Arrow Operator *)
-// arrow_expression:
-// | expr=logical_OR_expression
-//     { expr }
-// | e0=arrow_expression loc=RARROW e1=logical_OR_expression
-//     { [LustreAst.ARROW e0 e1 loc] }
+arrow_expression = {
+  (arrow_expression ~ "->" ~ logical_OR_expression)
+  | logical_OR_expression
+}
 
 // (* 6.5.15/16/17, 6.6 + Lustre merge operator *)
 // expression:
@@ -180,6 +179,12 @@ logical_OR_expression = {
 // | loc=MERGE id=VAR_NAME LPAREN TRUE  RARROW expr1=expression RPAREN
 // 			LPAREN FALSE RARROW expr2=expression RPAREN
 //     { [LustreAst.MERGE (fst id) expr1 expr2 loc] }
+expression = { 
+  ("merge" ~ identifier ~ "(" ~ "true" ~ "->" ~ expression ~")" ~ "(" ~ "false" ~ "->" ~ expression ~")")
+  | ("merge" ~ "(" ~ identifier ~ ";" ~ expression ~ ";" ~ expression ~ ")")
+  | ("if" ~ expression ~ "then" ~ expression ~ "else" ~ expression)
+  | arrow_expression
+}
 
 // (* Declarations are much simpler than in C. We do not have arrays,
 //    structs/unions, or pointers. We do not have storage-class specifiers,
@@ -187,61 +192,42 @@ logical_OR_expression = {
 //    (e.g., "unsigned short int"), since we use the type names from
 //    stdint.h/Scade (e.g., "uint_16"). *)
 
-// var_decl:
-// | ids=identifier_list loc=COLON ty=type_name clk=declared_clock
-//     { map (fun id=> (id, (fst ty, clk, loc))) (rev ids) }
+var_decl = { 
+  (identifier_list ~ ":" ~ type_name ~ declared_clock) 
+  | (identifier_list ~ ":" ~ type_name) }
 
 // var_decl_list:
 // | vars=var_decl
 //     { vars }
 // | vars_list=var_decl_list SEMICOLON vars=var_decl
 //     { vars_list ++ vars }
-
+var_decl_list = { 
+  (var_decl_list ~ ";" ~ var_decl)
+  | var_decl
+}
 // local_var_decl:
 // | loc=VAR vars_list=var_decl_list SEMICOLON
 //     { vars_list }
+local_var_decl = { "var" ~ var_decl_list ~ ";"}
 
 // identifier_list:
 // | id=VAR_NAME
 //     { [fst id] }
 // | idl=identifier_list COMMA id=VAR_NAME
 //     { fst id :: idl }
+identifier_list = { 
+  (identifier_list ~ "," ~ identifier)
+  | identifier
+}
 
-// type_name:
-// | loc=INT8
-//     { (LustreAst.Tint8, loc) }
-// | loc=UINT8
-//     { (LustreAst.Tuint8, loc) }
-// | loc=INT16
-//     { (LustreAst.Tint16, loc) }
-// | loc=UINT16
-//     { (LustreAst.Tuint16, loc) }
-// | loc=INT32
-//     { (LustreAst.Tint32, loc) }
-// | loc=UINT32
-//     { (LustreAst.Tuint32, loc) }
-// | loc=INT64
-//     { (LustreAst.Tint64, loc) }
-// | loc=UINT64
-//     { (LustreAst.Tuint64, loc) }
-// | loc=FLOAT32
-//     { (LustreAst.Tfloat32, loc) }
-// | loc=FLOAT64
-//     { (LustreAst.Tfloat64, loc) }
-// | loc=BOOL
-//     { (LustreAst.Tbool, loc) }
+type_name = {"int8" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" | "uint64" | "float32" | "float64" | "bool"}
 
-// declared_clock:
-// | /* empty */
-//     { LustreAst.FULLCK LustreAst.BASE }
-// | WHEN id=VAR_NAME
-//     { LustreAst.WHENCK (fst id) true }
-// | WHEN NOT id=VAR_NAME
-//     { LustreAst.WHENCK (fst id) false }
-// | WHENOT id=VAR_NAME
-//     { LustreAst.WHENCK (fst id) false }
-// | COLONCOLON clk=clock
-//     { LustreAst.FULLCK clk }
+
+declared_clock = {
+  ("::" ~ clock)
+  | ("whenot" ~ identifier)
+  | ("when"   ~ identifier)
+}
 
 // clock:
 // | DOT
@@ -250,16 +236,27 @@ logical_OR_expression = {
 //     { LustreAst.ON clk (fst id) true }
 // | clk=clock ONOT id=VAR_NAME
 //     { LustreAst.ON clk (fst id) false }
+clock = {
+  (clock ~ "onot" ~ identifier)
+  | (clock ~ "on" ~ identifier)
+  | (".")
+}
 
 // local_decl:
 // | vd=local_var_decl
 //     { vd }
+local_decl = _{
+  local_var_decl
+}
 
 // local_decl_list:
 // | /* empty */
 //     { [] }
 // | dl=local_decl_list d=local_decl
 //     { d ++ dl }
+local_decl_list = {
+  (local_decl_list ~ local_decl)
+}
 
 // parameter_list:
 // | vars=var_decl
