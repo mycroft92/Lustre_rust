@@ -38,163 +38,87 @@ integer_constant = _{ (hexadecimal_constant) | (octal_constant) | (decimal_const
 
 constant         = _{ bool_constant | integer_constant } 
 
-// primary_expression:
-// | var=VAR_NAME
-//     { [LustreAst.VARIABLE (fst var) (snd var)] }
-// | cst=constant
-//     { [LustreAst.CONSTANT (fst cst) (snd cst)] }
-// | loc=LPAREN expr=expression_list RPAREN
-//     { rev expr }
-primary_expression = { identifier | constant | expression_list }
 
 // (* 6.5.2 *)
 postfix_expression = { 
   (identifier ~ "(" ~ expression_list ~ ")") 
   | ("(" ~  "restart" ~ identifier ~ "every" ~ expression ~ ")" ~ "(" ~ expression_list ~")") 
-  | primary_expression }
+  }
 
 expression_list    = { expression ~ ( "," ~ expression)* }
 
-// (* 6.5.3 *)
-// unary_expression:
-// | expr=postfix_expression
-//     { expr }
-// | op=unary_operator expr=cast_expression
-//     { [LustreAst.UNARY (fst op) expr (snd op)] }
-// | loc=HASH LPAREN args=expression_list RPAREN
-//     {
-//       (* Macro expand the Lustre # operator (mutual exclusion: at most
-//          one of the variable number of arguments may be true). Compare
-// 	 with "true" to ensure that non-bool arguments are properly
-// 	 treated. Is there a prettier way to do this? *)
-//       [LustreAst.BINARY
-//         LustreAst.LE
-//         [fold_right (fun es e => LustreAst.BINARY LustreAst.ADD [e] [es] loc)
-// 	  (LustreAst.CONSTANT (LustreAst.CONST_INT LustreAst.string_zero) loc)
-// 	  (map (fun e=>LustreAst.CAST LustreAst.Tbool [e] loc)
-// 	   args)]
-// 	[LustreAst.CONSTANT (LustreAst.CONST_INT LustreAst.string_one) loc]
-// 	loc]
-//     }
 unary_expression = { 
   ("#" ~ "(" ~ expression_list  ~ ")")
-  | unary_operator ~ cast_expression 
-  | postfix_expression }
+  | unary_operator ~ cast_expression }
 
 
 unary_operator = {"-" | "~" | "!"}
 
+binary_expression = {
+  primary_expression ~ (binop ~ expression)*
+}
+
+binop = _{ FBY | GE | LE | EQ | NE | LSH | RSH | GT | LT | ARR | ADD | SUB | MUL | DIV | MOD | AND | OR | LOR | LAND | XOR | LXOR | WHEN | WHENOT | COMMA }
+
+//ops for pratt parser
+FBY  = {"fby"}
+GE   = {">="}
+LE   = {"<="}
+EQ   = {"="}
+NE   = {"<>"}
+LSH  = {"<<"}
+RSH  = {">>"}
+GT   = {">"}
+LT   = {"<"}
+ARR  = {"->"}
+ADD  = {"+"}
+SUB  = {"-"}
+MUL  = {"*"}
+DIV  = {"/"}
+MOD  = {"%"}
+AND  = {"and"}
+LAND = {"land"}
+OR   = {"or"}
+LOR  = {"lor"}
+XOR  = {"xor"}
+LXOR = {"lxor"}
+WHEN = {"when"}
+WHENOT = {"whenot"}
+COMMA  = {","} //to have expression list at top level expression
 // (* 6.5.4 *)
 cast_expression = {
-  ("(" ~ cast_expression ~ ":" ~ type_name ~ ")") 
-  | (unary_expression)}
+  ("(" ~ expression ~ ":" ~ type_name ~ ")") 
 
-fby_expression = { 
-  (cast_expression ~ "fby" ~ fby_expression) 
-  | (cast_expression)}
-
-// (* 6.5.5 *)
-multiplicative_expression = { 
-  (multiplicative_expression ~ "*" ~ fby_expression) 
-  | (multiplicative_expression ~ "/" ~ fby_expression) 
-  | (multiplicative_expression ~ "%" ~ fby_expression) 
-  | fby_expression }
-
-// (* 6.5.6 *)
-additive_expression  = { 
-    (additive_expression ~ "+" ~ multiplicative_expression) 
-    |  (additive_expression ~ "-" ~ multiplicative_expression) 
-    | multiplicative_expression }
-
-// (* 6.5.7 *)
-shift_expression     = {
-    (shift_expression ~ "<<" ~ additive_expression) 
-    | (shift_expression ~ ">>" ~ additive_expression) 
-    | additive_expression}
-
-when_expression  = { 
-    (when_expression ~ "whenot" ~ identifier)
-    | (when_expression ~ "when" ~ identifier)
-    | shift_expression}
-
-// (* 6.5.8 *)
-relational_expression = { 
-  (relational_expression ~ "<=" ~ when_expression) 
-  | (relational_expression ~ ">=" ~ when_expression)
-  | (relational_expression ~ "<" ~ when_expression)
-  | (relational_expression ~ ">" ~ when_expression)
-  | when_expression }
-
-// (* 6.5.9 *)
-equality_expression = {
-  (equality_expression ~ "=" ~ relational_expression)
-  | (equality_expression ~ "<>" ~ relational_expression)
-  | relational_expression
 }
 
-// (* 6.5.10 *)
-AND_expression = {
-  (AND_expression ~ "and" ~ equality_expression)
-  | equality_expression
-}
-
-// (* 6.5.11 *)
-exclusive_OR_expression = { 
-  (exclusive_OR_expression ~ "xor" ~ AND_expression)
-  | (exclusive_OR_expression ~ "lxor" ~ AND_expression)
-  | AND_expression
- }
-
-// (* 6.5.12 *)
-inclusive_OR_expression = {
-  (inclusive_OR_expression ~ "lor" ~ exclusive_OR_expression)
-  | exclusive_OR_expression
-}
-
-// (* 6.5.13 *)
-logical_AND_expression = {
-  (logical_AND_expression ~ "LAND" ~ inclusive_OR_expression)
-  | inclusive_OR_expression
-}
-
-// (* 6.5.14 *)
-logical_OR_expression = {
-  (logical_OR_expression ~ "or" ~ logical_AND_expression)
-  | logical_AND_expression
-}
-// (* Lustre Arrow Operator *)
-arrow_expression = {
-  (arrow_expression ~ "->" ~ logical_OR_expression)
-  | logical_OR_expression
-}
 
 // (* 6.5.15/16/17, 6.6 + Lustre merge operator *)
-expression = { 
+primary_expression = { 
   ("merge" ~ identifier ~ "(" ~ "true" ~ "->" ~ expression ~")" ~ "(" ~ "false" ~ "->" ~ expression ~")")
   | ("merge" ~ "(" ~ identifier ~ ";" ~ expression ~ ";" ~ expression ~ ")")
   | ("if" ~ expression ~ "then" ~ expression ~ "else" ~ expression)
-  | arrow_expression
+  | cast_expression
+  | unary_expression
+  | postfix_expression // function calls
+  | identifier
+  | constant
 }
 
-// (* Declarations are much simpler than in C. We do not have arrays,
-//    structs/unions, or pointers. We do not have storage-class specifiers,
-//    type-qualifiers, or alignment specifiers. Nor are our type-specifiers lists
-//    (e.g., "unsigned short int"), since we use the type names from
-//    stdint.h/Scade (e.g., "uint_16"). *)
+expression = { primary_expression | binary_expression}
 
 var_decl = { 
   (identifier_list ~ ":" ~ type_name ~ declared_clock) 
   | (identifier_list ~ ":" ~ type_name) }
 
 var_decl_list = { 
-  (var_decl_list ~ ";" ~ var_decl)
+  (var_decl ~ ";" ~ var_decl_list)
   | var_decl
 }
 
 local_var_decl = { "var" ~ var_decl_list ~ ";"}
 
 identifier_list = { 
-  (identifier_list ~ "," ~ identifier)
+  (identifier ~ "," ~ identifier_list)
   | identifier
 }
 
@@ -206,23 +130,35 @@ declared_clock = {
   | ("when"   ~ identifier)
 }
 
+clock_constructor = _{
+  ("onot" ~ identifier ~ clock_constructor)
+  | ("on" ~ identifier ~ clock_constructor)
+  | ("onot" ~ identifier)
+  | ("on" ~ identifier)
+}
+
+// clock = {
+//   (clock ~ "onot" ~ identifier)
+//   | (clock ~ "on" ~ identifier)
+//   | (".")
+// }
+
 clock = {
-  (clock ~ "onot" ~ identifier)
-  | (clock ~ "on" ~ identifier)
-  | (".")
+  (".")
+  | ("." ~ clock_constructor)
 }
 
 local_decl_list = {
-  (local_decl_list ~ local_var_decl)
+  (local_var_decl ~ local_decl_list)
 }
 
 parameter_list = {
-  (parameter_list ~ ";" ~ var_decl)
+  (var_decl ~ ";" ~ parameter_list)
   | var_decl
 }
 
 pattern = {
-  (pattern ~ "," ~ identifier)
+  (identifier ~ "," ~ pattern)
   | identifier
 }
 
@@ -232,21 +168,14 @@ equation = {
 }
 
 equations = {
-  (equations ~ "assert" ~ expression ~ ";")
-  | (equations ~ equation)
+  ("assert" ~ expression ~ ";" ~ equations)
+  | (equation ~ equations)
 }
 
 node_or_function = {
   "node" | "function"
 }
 
-// declaration:
-// | is_node=node_or_function id=VAR_NAME
-//   LPAREN iparams=oparameter_list RPAREN optsemicolon
-//   RETURNS LPAREN oparams=oparameter_list RPAREN optsemicolon
-//   locals=local_decl_list LET eqns=equations TEL optsemicolon
-//     { LustreAst.NODE
-//         (fst id) (fst is_node) iparams oparams locals eqns (snd is_node) }
 
 declaration = {
   (node_or_function ~ identifier ~ "(" ~ parameter_list? ~ ")" ~ ";"? 
@@ -255,7 +184,7 @@ declaration = {
 }
 
 translation_unit = {
-  (translation_unit ~ declaration)
+  | (declaration ~ translation_unit)
   | declaration
 }
 
