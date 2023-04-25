@@ -14,9 +14,9 @@ impl std::fmt::Display for Loc {
 #[derive(Debug)]
 pub enum ErrorKind {
     //Notate parse errors
-    ParseError,
-    CMDLineError,
-    FileNotFoundError,
+    ParseError (Box<String>),
+    CMDLineError (Box<String>),
+    FileNotFoundError(Box<String>),
 }
 
 #[derive(Debug)]
@@ -31,9 +31,9 @@ pub type LusRes<T> = Result<T, Error>;
 impl std::fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std ::fmt::Result {
         let res = match self {
-            ErrorKind::ParseError => "ParseError",
-            ErrorKind::CMDLineError => "CMDLineError",
-            ErrorKind::FileNotFoundError => "FileNotFoundError",
+            ErrorKind::ParseError(x) =>  format!("ParseError: {}", x),
+            ErrorKind::CMDLineError(x) => format!("CMDLineError: {}", x),
+            ErrorKind::FileNotFoundError(x) => format!("FileNotFoundError: {}", x)
         };
         write!(f, "{}", res)
     }
