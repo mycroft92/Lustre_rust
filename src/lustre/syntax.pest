@@ -17,7 +17,7 @@ identifier    = @{ ("_" | ASCII_ALPHA)+ ~ ("_" | ASCII_ALPHA | ASCII_DIGIT)* }
 nonzero_digit        = _{ ('1'..'9') }
 decimal_constant = { nonzero_digit ~ ASCII_DIGIT* }
 octal_digit      = _{('0'..'7')}
-octal_constant   = { "0" ~ octal_digit*}
+octal_constant   = { "0" ~ octal_digit+}
 hexadecimal_prefix   = _{ ("0x") | ("0X") }
 hexadecimal_digit    = _{ ('A'..'F') | ('a'..'f') | ASCII_DIGIT }
 hexadecimal_constant = { hexadecimal_prefix  ~ hexadecimal_digit+ }
@@ -35,8 +35,9 @@ integer_suffix   = {
 // integer_constant = { (hexadecimal_constant ~ integer_suffix?) | (octal_constant ~ integer_suffix?) | (decimal_constant ~ integer_suffix? ) }
 
 integer_constant = _{ (hexadecimal_constant) | (octal_constant) | (decimal_constant) }
+rational_number  = {ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+}
 
-constant         = _{ bool_constant | integer_constant } 
+constant         = _{ bool_constant | rational_number | integer_constant } 
 
 
 // (* 6.5.2 *)
@@ -104,7 +105,7 @@ primary_expression = {
   | constant
 }
 
-expression = { primary_expression | binary_expression}
+expression = {primary_expression | binary_expression}
 
 var_decl = { 
   (identifier_list ~ ":" ~ type_name ~ declared_clock) 

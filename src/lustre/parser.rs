@@ -32,7 +32,7 @@ impl LustreParser {
             let parsed_res = LustreParser::parse(Rule::constant, "true");
             println!("{:?}", parsed_res);
 
-            let parsed_res = LustreParser::parse(Rule::file, "027L");
+            let parsed_res = LustreParser::parse(Rule::constant, "027L");
             println!("{:?}", parsed_res);
     }
 }
