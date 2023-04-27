@@ -20,8 +20,20 @@ type ParseRes<T> = Result<T, Error<Rule>>;
 // } 
 lazy_static::lazy_static! {
     static ref PRATT: PrattParser<Rule> =
-    PrattParser::new();
+    PrattParser::new()
+        .op(Op::infix(Rule::COMMA, Left))
+        .op(Op::infix(Rule::ARR, Right))
+        .op(Op::infix(Rule::FBY, Right))
+        .op(Op::infix(Rule::OR, Right) | Op::infix(Rule::LOR, Right) | Op::infix(Rule::AND, Right) | Op::infix(Rule::LAND, Right) | Op::infix(Rule::EQ, Right) 
+            | Op::infix(Rule::NE, Right)| Op::infix(Rule::GT, Right) | Op::infix(Rule::LT, Right) | Op::infix(Rule::GE, Right) | Op::infix(Rule::LE, Right) 
+            | Op::infix(Rule::LSH, Left) | Op::infix(Rule::RSH, Left))
+        .op(Op::infix(Rule::WHEN, Left)  | Op::infix(Rule::WHENOT, Left))
+        .op(Op::infix(Rule::ADD, Left) | Op::infix(Rule::SUB, Left))
+        .op(Op::infix(Rule::MUL, Left)| Op::infix(Rule::DIV, Left) | Op::infix(Rule::MOD, Left));
 }
+
+
+
 
 impl LustreParser {
     
