@@ -92,12 +92,15 @@ cast_expression = {
 
 }
 
+mrg_exp1 = _{("merge" ~ identifier ~ "(" ~ "true" ~ "->" ~ expression ~")" ~ "(" ~ "false" ~ "->" ~ expression ~")")}
+mrg_exp2 = _{("merge" ~ "(" ~ identifier ~ ";" ~ expression ~ ";" ~ expression ~ ")")}
+ite_exp  = _{("if" ~ expression ~ "then" ~ expression ~ "else" ~ expression)}
 
 // (* 6.5.15/16/17, 6.6 + Lustre merge operator *)
 primary_expression = { 
-  ("merge" ~ identifier ~ "(" ~ "true" ~ "->" ~ expression ~")" ~ "(" ~ "false" ~ "->" ~ expression ~")")
-  | ("merge" ~ "(" ~ identifier ~ ";" ~ expression ~ ";" ~ expression ~ ")")
-  | ("if" ~ expression ~ "then" ~ expression ~ "else" ~ expression)
+  mrg_exp1
+  | mrg_exp2
+  | ite_exp
   | cast_expression
   | unary_expression
   | postfix_expression // function calls
