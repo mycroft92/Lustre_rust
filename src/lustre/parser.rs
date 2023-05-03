@@ -1,10 +1,11 @@
 
 use pest::Parser;
-use pest::iterators::Pairs;
+use pest::iterators::{Pair,Pairs};
 use pest::pratt_parser::{PrattParser, Assoc::*, Op};
-use crate::errors;
+use crate::errors::{self, LusRes};
 use crate::lustre::ast;
 use pest_consume::{match_nodes, Error};
+use std::path::Path;
 
 // // include the grammar file so that Cargo knows to rebuild this file on grammar changes
 // const _GRAMMAR: &str = include_str!("lustre/syntax.pest");
@@ -69,7 +70,18 @@ impl LustreParser {
     //     .parse(pairs)
     // }
 
-    
+    pub fn parse_file (path: &Path) -> LusRes<Vec<ast::Node>> {
+        let content = std::fs::read_to_string(path).map_err(|err| {
+            crate::errors::Error{
+                kind: crate::errors::ErrorKind::FileNotFoundError, 
+                pos: None, 
+                msg: format!("Failed to read {}: {err}", path.to_string_lossy())}
+        })?;
+
+        let parsed_res = LustreParser::parse(Rule::file,&content);
+        //Fix this one
+        Ok(vec![])
+    }
 
     pub fn parse_string() {
             let parsed_res = LustreParser::parse(Rule::constant, "0x27");
@@ -80,6 +92,37 @@ impl LustreParser {
 
             let parsed_res = LustreParser::parse(Rule::constant, "027L");
             println!("{:?}", parsed_res);
+            let pairs = LustreParser::parse(Rule::type_name, "uint32").expect("Unknown type!");
+            for pair in pairs {
+                let parsed_res = LustreParser::match_type(pair);
+                println!("{:?}", parsed_res);
+            }
+
+            println!("{:?}", parsed_res);
+    }
+}
+
+// fn match_type(ty: str) -> ParseRes<ast::DType> {
+//     if (ty == "uint8")
+// }
+impl LustreParser {
+    fn match_type(pair: Pair<Rule>) -> ast::DType {
+        match pair.as_str() {
+            "uint8"   => ast::DType::UINT8,
+            "uint16"  => ast::DType::UINT16,
+            "uint32"  => ast::DType::UINT32,
+            "uint64"  => ast::DType::UINT64,
+            "int8"    => ast::DType::INT8,
+            "int16"   => ast::DType::INT16,
+            "int32"   => ast::DType::INT32,
+            "int64"   => ast::DType::INT64,
+            "float32" => ast::DType::FLOAT32,
+            "float64" => ast::DType::FLOAT64,
+            "bool"    => ast::DType::BOOL,
+            _         => unreachable!("Panic while parsing an unimplemented type")
+
+        }
+
     }
 }
 

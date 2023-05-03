@@ -1,15 +1,37 @@
 // Time to define the AST for the expression
 
 use pest::iterators::Pair;
+use crate::lustre::parser::Rule;
+use pest_consume::Error;
 
 #[derive(Debug)]
 pub enum DType {
+    UINT8,
+    UINT16,
+    UINT32,
     UINT64,
+    INT8,
+    INT16,
+    INT32,
     INT64,
-    UFLOAT64,
+    FLOAT32,
     FLOAT64,
     BOOL
 }
+
+//Cool way to just do try
+impl<'i> TryFrom<Pair<'i, Rule>> for DType {
+    type Error = Error<Rule>;
+    fn try_from(pair: Pair<'i, Rule>) -> Result<Self, Self::Error> {
+        let mut iter = pair.into_inner().next();
+        let val = iter.unwrap().as_str();
+        println!("Type: {}", val);
+        
+        Ok(DType::UINT64)
+    }
+}
+
+
 #[derive(Debug)]
 pub enum Binop {
     GE ,
@@ -32,6 +54,7 @@ pub enum Binop {
     XOR,
     LXOR,
 }
+
 
 #[derive(Debug)]
 pub enum Unop {
@@ -72,4 +95,9 @@ pub enum Exp {
     Emerge(String, Vec<Exp>, Vec<Exp>, LAnn),
     Eite(Box<Exp>, Vec<Exp>, Vec<Exp>, LAnn),
     Eapp(String, Vec<Exp>, Option<Box<Exp>>, LAnn)
+}
+
+#[derive(Debug)]
+pub struct Node {
+
 }
