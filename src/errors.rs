@@ -14,7 +14,7 @@ impl std::fmt::Display for Loc {
 #[derive(Debug)]
 pub enum ErrorKind {
     //Notate parse errors
-    ParseError ,
+    ParseError,
     CMDLineError ,
     FileNotFoundError,
     UnknownError
