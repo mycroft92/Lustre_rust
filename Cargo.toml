@@ -11,5 +11,9 @@ pest = "2"
 pest_derive = "2"
 pest_consume = "1"
 lazy_static = "1.2"
+
+log = "0.4"
+log4rs = "1.1.1"
+
 #commandline parsing
 clap    = {version = "4.1.8", features = ["derive", "wrap_help", "env"] }
