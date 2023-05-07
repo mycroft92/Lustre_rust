@@ -19,6 +19,20 @@ pub enum DType {
     BOOL
 }
 
+// #[derive(Debug)]
+// pub struct Loc{
+//     pub start: usize,
+//     pub end  : usize,
+//     //Probably I need something else to do this
+//     pub fname : String
+// }
+
+#[derive(Debug)]
+pub struct Ident {
+    pub  id: String,
+    // pub pos: Option<Loc>
+}
+
 //Cool way to just do try
 impl<'i> TryFrom<Pair<'i, Rule>> for DType {
     type Error = Error<Rule>;
@@ -65,11 +79,11 @@ pub enum Unop {
 #[derive(Debug)]
 pub enum Clock {
     CBase,
-    COn(Box<Clock>, String, bool)
+    COn(Box<Clock>, Ident, bool)
 }
 
 
-pub type NClock = (Clock, Option<String>);
+pub type NClock = (Clock, Option<Ident>);
 pub type Ann    = (DType, NClock);
 pub type LAnn   = (Vec<DType>, NClock);
 
@@ -83,18 +97,19 @@ pub enum Const {
     Float (f64)
 }
 
+
 #[derive(Debug)]
 pub enum Exp {
     Econst(Const),
-    Evar(String, Ann),
-    Eunop(Unop, Box<Exp>, Ann),
-    Ebinop(Binop, Box<Exp>, Box<Exp>, Ann),
-    Efby(Vec<Exp>, Vec<Exp>, LAnn),
-    Earrow(Vec<Exp>, Vec<Exp>, LAnn),
-    Ewhen(Vec<Exp>, String, bool, LAnn),
-    Emerge(String, Vec<Exp>, Vec<Exp>, LAnn),
-    Eite(Box<Exp>, Vec<Exp>, Vec<Exp>, LAnn),
-    Eapp(String, Vec<Exp>, Option<Box<Exp>>, LAnn)
+    Evar(Ident, Option<Ann>),
+    Eunop(Unop, Box<Exp>, Option<Ann>),
+    Ebinop(Binop, Box<Exp>, Box<Exp>, Option<Ann>),
+    Efby(Vec<Exp>, Vec<Exp>, Option<LAnn>),
+    Earrow(Vec<Exp>, Vec<Exp>, Option<LAnn>),
+    Ewhen(Vec<Exp>, Ident, bool, Option<LAnn>),
+    Emerge(Ident, Vec<Exp>, Vec<Exp>, Option<LAnn>),
+    Eite(Box<Exp>, Vec<Exp>, Vec<Exp>, Option<LAnn>),
+    Eapp(Ident, Vec<Exp>, Option<Box<Exp>>, Option<LAnn>)
 }
 
 #[derive(Debug)]

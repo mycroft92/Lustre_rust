@@ -14,7 +14,9 @@ use std::path::Path;
 
 #[derive(Parser)]
 #[grammar="lustre/syntax.pest"]
-pub struct LustreParser;
+pub struct LustreParser{
+    fname: String,
+}
 
 type ParseRes<T> = Result<T, Error<Rule>>;
 
@@ -90,15 +92,21 @@ impl LustreParser {
             let parsed_res = LustreParser::parse(Rule::constant, "true");
             println!("{:?}", parsed_res);
 
-            let parsed_res = LustreParser::parse(Rule::constant, "027L");
+            let parsed_res = LustreParser::parse(Rule::mrg_exp1, "merge a (true -> x) (false -> y)").expect("Unexpected parse");
             println!("{:?}", parsed_res);
+            for pair in parsed_res {
+                match pair.as_rule() {
+                    Rule::mrg_exp1 => {LustreParser::parse_mrg1(pair); ()},
+                    _              => println!("Got here")
+                };
+            }
             let pairs = LustreParser::parse(Rule::type_name, "uint32").expect("Unknown type!");
             for pair in pairs {
                 let parsed_res = LustreParser::match_type(pair);
                 println!("{:?}", parsed_res);
             }
 
-            println!("{:?}", parsed_res);
+            // println!("{:?}", parsed_res);
     }
 }
 
@@ -123,6 +131,42 @@ impl LustreParser {
 
         }
 
+    }
+
+    // fn parse_primary(pair: Pair<Rule>) -> ParseRes<ast::Exp> {
+    //     match pair.as_rule() {
+    //         Rule::mrg_exp1 => LustreParser::parse_mrg1(pair)
+    //     }
+
+    // }
+        //write a function for each type like this and call parse_expression finally
+    fn parse_id(pair: Pair<Rule>) -> ParseRes<ast::Ident>{
+        let loc = pair.as_span();
+        let ident = ast::Ident {id: String::from(loc.as_str())};
+        Ok(ident)
+    }
+
+    fn parse_mrg2(pair: Pair<Rule>) -> ParseRes<ast::Exp> {
+        let mut items = pair.into_inner();
+        println!("Rules: {:?}",items);
+        let token= items.next().unwrap();
+        //The following two must be present
+        let texp = parse_expression(items.next().unwrap());
+        let fexp = parse_expression(items.next().unwrap());
+    }
+
+    fn parse_mrg1(pair: Pair<Rule>) -> ParseRes<ast::Exp> {
+        let mut items = pair.into_inner();
+        //unwrap should work always since the rule succeeded
+        println!("Rules: {:?}",items);
+        let token= items.next().unwrap();
+        
+        let ident = LustreParser::parse_id(token)?;
+        println!("Check: {:?}", ident);
+        // let mut t_branch = vec![];
+        // match 
+
+        Ok(ast::Exp::Emerge(ident, vec![], vec![], None))
     }
 }
 

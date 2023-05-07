@@ -9,7 +9,7 @@
 
 // node = { "node" ~ identifier ~ "(" ~ streams_decl ~ ")" ~ "return" ~ streams_decl ~ "let" ~ var}
 
-
+WHITESPACE = _{ " " | "\t" | "\n" | "\r\n" }
 bool_constant = { "true" | "false" }
 identifier    = @{ ("_" | ASCII_ALPHA)+ ~ ("_" | ASCII_ALPHA | ASCII_DIGIT)* }
 
@@ -20,7 +20,7 @@ octal_digit      = _{('0'..'7')}
 octal_constant   = { "0" ~ octal_digit+}
 hexadecimal_prefix   = _{ ("0x") | ("0X") }
 hexadecimal_digit    = _{ ('A'..'F') | ('a'..'f') | ASCII_DIGIT }
-hexadecimal_constant = { hexadecimal_prefix  ~ hexadecimal_digit+ }
+hexadecimal_constant = @{ hexadecimal_prefix  ~ hexadecimal_digit+ }
 
 //Not using these rules currently
 unsigned_suffix  = _{ "u" | "U"}
@@ -32,10 +32,12 @@ integer_suffix   = {
   | (long_suffix      ~ unsigned_suffix?)
   | (long_long_suffix ~ unsigned_suffix?) }
 
+
+
 // integer_constant = { (hexadecimal_constant ~ integer_suffix?) | (octal_constant ~ integer_suffix?) | (decimal_constant ~ integer_suffix? ) }
 
 integer_constant = _{ (hexadecimal_constant) | (octal_constant) | (decimal_constant) }
-rational_number  = {ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+}
+rational_number  = @{ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+}
 
 constant         = _{ bool_constant | rational_number | integer_constant } 
 
@@ -92,23 +94,24 @@ cast_expression = {
 
 }
 
-mrg_exp1 = _{("merge" ~ identifier ~ "(" ~ "true" ~ "->" ~ expression ~")" ~ "(" ~ "false" ~ "->" ~ expression ~")")}
-mrg_exp2 = _{("merge" ~ "(" ~ identifier ~ ";" ~ expression ~ ";" ~ expression ~ ")")}
-ite_exp  = _{("if" ~ expression ~ "then" ~ expression ~ "else" ~ expression)}
+mrg_exp1 = {("merge" ~ identifier ~ "(" ~ "true" ~ "->" ~ expression ~")" ~ "(" ~ "false" ~ "->" ~ expression ~")")}
+mrg_exp2 = {("merge" ~ "(" ~ identifier ~ ";" ~ expression ~ ";" ~ expression ~ ")")}
+ite_exp  = {("if" ~ expression ~ "then" ~ expression ~ "else" ~ expression)}
 
 // (* 6.5.15/16/17, 6.6 + Lustre merge operator *)
-primary_expression = { 
+primary_expression = _{ 
   mrg_exp1
   | mrg_exp2
   | ite_exp
   | cast_expression
+  | ("(" ~ expression_list ~ ")")
   | unary_expression
   | postfix_expression // function calls
   | identifier
   | constant
 }
 
-expression = {primary_expression | binary_expression}
+expression = {primary_expression | binary_expression }
 
 var_decl = { 
   (identifier_list ~ ":" ~ type_name ~ declared_clock) 
