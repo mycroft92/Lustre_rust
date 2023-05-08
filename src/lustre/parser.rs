@@ -133,6 +133,10 @@ impl LustreParser {
 
     }
 
+    fn parse_expression(pair: Pair<Rule>) -> ParseRes<Vec<ast::Exp>> {
+
+    }
+
     // fn parse_primary(pair: Pair<Rule>) -> ParseRes<ast::Exp> {
     //     match pair.as_rule() {
     //         Rule::mrg_exp1 => LustreParser::parse_mrg1(pair)
@@ -146,13 +150,15 @@ impl LustreParser {
         Ok(ident)
     }
 
-    fn parse_mrg2(pair: Pair<Rule>) -> ParseRes<ast::Exp> {
+    fn parse_mrg(pair: Pair<Rule>) -> ParseRes<ast::Exp> {
         let mut items = pair.into_inner();
         println!("Rules: {:?}",items);
         let token= items.next().unwrap();
         //The following two must be present
-        let texp = parse_expression(items.next().unwrap());
-        let fexp = parse_expression(items.next().unwrap());
+        let ident = LustreParser::parse_id(token)?;
+        let texp = LustreParser::parse_expression(items.next().unwrap())?;
+        let fexp = LustreParser::parse_expression(items.next().unwrap())?;
+        Ok(ast::Exp::Emerge(ident, texp, fexp, None))
     }
 
     fn parse_mrg1(pair: Pair<Rule>) -> ParseRes<ast::Exp> {
