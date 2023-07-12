@@ -19,18 +19,18 @@ pub enum DType {
     BOOL
 }
 
-// #[derive(Debug)]
-// pub struct Loc{
-//     pub start: usize,
-//     pub end  : usize,
-//     //Probably I need something else to do this
-//     pub fname : String
-// }
+#[derive(Debug)]
+pub struct Loc{
+    pub start: usize,
+    pub end  : usize,
+    //Probably I need something else to do this
+    // pub fname : String
+}
 
 #[derive(Debug)]
 pub struct Ident {
     pub  id: String,
-    // pub pos: Option<Loc>
+    pub pos: Loc
 }
 
 //Cool way to just do try
@@ -93,6 +93,7 @@ pub type LAnn   = (Vec<DType>, NClock);
 #[derive(Debug)]
 pub enum Const {
     //Can add more as required
+    Bool(bool),
     Int (i64),
     Float (f64)
 }
@@ -101,14 +102,29 @@ pub enum Const {
 #[derive(Debug)]
 pub enum Exp {
     Econst(Const),
+    Etup(Vec<Exp>), // Probably I can redo what Lustre did
     Evar(Ident, Option<Ann>),
     Eunop(Unop, Box<Exp>, Option<Ann>),
     Ebinop(Binop, Box<Exp>, Box<Exp>, Option<Ann>),
-    Efby(Vec<Exp>, Vec<Exp>, Option<LAnn>),
-    Earrow(Vec<Exp>, Vec<Exp>, Option<LAnn>),
-    Ewhen(Vec<Exp>, Ident, bool, Option<LAnn>),
-    Emerge(Ident, Vec<Exp>, Vec<Exp>, Option<LAnn>),
-    Eite(Box<Exp>, Vec<Exp>, Vec<Exp>, Option<LAnn>),
+    Efby(Box<Exp>, Box<Exp>, Option<LAnn>),
+    Earrow(Box<Exp>, Box<Exp>, Option<LAnn>),
+    Ewhen(Box<Exp>, Ident, bool, Option<LAnn>),
+    Emerge(Ident, Box<Exp>, Box<Exp>, Option<LAnn>),
+    Eite(Box<Exp>, Box<Exp>, Box<Exp>, Option<LAnn>),
+    Eapp(Ident, Vec<Exp>, Option<Box<Exp>>, Option<LAnn>)
+}
+
+#[derive(Debug)]
+pub enum PureExp {
+    Econst(Const),
+    Evar(Ident, Option<Ann>),
+    Eunop(Unop, Box<Exp>, Option<Ann>),
+    Ebinop(Binop, Box<Exp>, Box<Exp>, Option<Ann>),
+    Efby(Box<Exp>, Box<Exp>, Option<LAnn>),
+    Earrow(Box<Exp>, Box<Exp>, Option<LAnn>),
+    Ewhen(Box<Exp>, Ident, bool, Option<LAnn>),
+    Emerge(Ident, Box<Exp>, Box<Exp>, Option<LAnn>),
+    Eite(Box<Exp>, Box<Exp>, Box<Exp>, Option<LAnn>),
     Eapp(Ident, Vec<Exp>, Option<Box<Exp>>, Option<LAnn>)
 }
 

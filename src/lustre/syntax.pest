@@ -43,10 +43,13 @@ constant         = _{ bool_constant | rational_number | integer_constant }
 
 
 // (* 6.5.2 *)
-postfix_expression = { 
-  (identifier ~ "(" ~ expression_list ~ ")") 
-  | ("(" ~  "restart" ~ identifier ~ "every" ~ expression ~ ")" ~ "(" ~ expression_list ~")") 
-  }
+postfix_expression = _{ 
+  postf_exp1
+  | postf_exp2
+}
+
+postf_exp1 = {(identifier ~ "(" ~ expression_list ~ ")") }
+postf_exp2 = {("(" ~  "restart" ~ identifier ~ "every" ~ expression ~ ")" ~ "(" ~ expression_list ~")") }
 
 expression_list    = { expression ~ ( "," ~ expression)* }
 
@@ -104,7 +107,7 @@ primary_expression = _{
   | mrg_exp2
   | ite_exp
   | cast_expression
-  | ("(" ~ expression_list ~ ")")
+  | ("(" ~ expression ~ ")")
   | unary_expression
   | postfix_expression // function calls
   | identifier
@@ -137,11 +140,15 @@ declared_clock = {
   | ("when"   ~ identifier)
 }
 
+cc1 = {("onot" ~ identifier ~ clock_constructor)}
+cc2 = {("on" ~ identifier ~ clock_constructor)}
+cc3 = {("onot" ~ identifier)}
+cc4 = {("on" ~ identifier)}
 clock_constructor = _{
-  ("onot" ~ identifier ~ clock_constructor)
-  | ("on" ~ identifier ~ clock_constructor)
-  | ("onot" ~ identifier)
-  | ("on" ~ identifier)
+  cc1
+  | cc2
+  | cc3
+  | cc4
 }
 
 // clock = {
